@@ -8,7 +8,7 @@ import { loadOpenAPIV3Document } from './openapi';
 import ReferenceObject = OpenAPIV3.ReferenceObject;
 import SchemaObject = OpenAPIV3.SchemaObject;
 import ArraySchemaObject = OpenAPIV3.ArraySchemaObject;
-import {ApiInputConfiguration} from "./api-input-configuration.type";
+import { ApiInputConfiguration } from './api-input-configuration.type';
 
 const AML_NODE_LAYER_LABEL = 'model';
 const AML_NODE_TYPE_TAG_NAME = 'amlNodeType';

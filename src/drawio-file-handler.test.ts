@@ -82,6 +82,4 @@ describe('loadDrawIoFile()', () => {
   });
 });
 
-describe("updateDrawIoFile", () => {
-  
-});
+describe('updateDrawIoFile', () => {});

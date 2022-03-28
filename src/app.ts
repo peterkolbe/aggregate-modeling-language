@@ -1,7 +1,7 @@
 import log from 'loglevel';
 import { DiagramPage, loadDrawIoFile, updateDrawIoFile } from './drawio-file-handler';
 import { updateDiagramPagesWithSchemas } from './diagram-manipulator';
-import {apiInputConfigurations} from "./api-input-configurations";
+import { apiInputConfigurations } from './api-input-configurations';
 
 log.setDefaultLevel('info');
 log.info('### Start');

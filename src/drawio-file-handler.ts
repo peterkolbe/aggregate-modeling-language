@@ -1,4 +1,4 @@
-import { ElementCompact , js2xml, xml2js} from 'xml-js';
+import { ElementCompact, js2xml, xml2js } from 'xml-js';
 import fs from 'fs';
 import * as htmlEncoder from 'html-entities';
 import { deflateRaw, inflateRaw } from 'pako';
@@ -13,8 +13,8 @@ export interface DiagramPage {
 }
 
 export function loadDrawIoFile(path: string): DiagramPage[] {
-  if(!path){
-    throw Error("path must not be empty");
+  if (!path) {
+    throw Error('path must not be empty');
   }
 
   const xmfileXml: string = fs.readFileSync(path, 'utf8');
@@ -24,7 +24,7 @@ export function loadDrawIoFile(path: string): DiagramPage[] {
   let diagrams = [];
 
   if (!Array.isArray(diagramContainer)) {
-  //   // only 1 page existing in the drawio diagram ==> put into array for further processing
+    // only 1 page existing in the drawio diagram ==> put into array for further processing
     diagrams.push(diagramContainer);
   } else {
     diagrams = diagramContainer;
