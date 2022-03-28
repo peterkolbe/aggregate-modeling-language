@@ -5,10 +5,10 @@ import { OpenAPIV3 } from 'openapi-types';
 import * as htmlEncoder from 'html-entities';
 import { DiagramPage } from './drawio-file-handler';
 import { loadOpenAPIV3Document } from './openapi';
-import { ApiDefinition } from './app';
 import ReferenceObject = OpenAPIV3.ReferenceObject;
 import SchemaObject = OpenAPIV3.SchemaObject;
 import ArraySchemaObject = OpenAPIV3.ArraySchemaObject;
+import {ApiInputConfiguration} from "./api-input-configuration.type";
 
 const AML_NODE_LAYER_LABEL = 'model';
 const AML_NODE_TYPE_TAG_NAME = 'amlNodeType';
@@ -50,7 +50,7 @@ function getNodesForSchema(
   schemaName: string,
   pageName: string,
   pageDiagramRoot: ElementCompact,
-  apiDefinition: ApiDefinition
+  apiDefinition: ApiInputConfiguration
 ): Array<any> {
   const nodes = pageDiagramRoot.object.filter(
     (object: any) =>
@@ -132,7 +132,7 @@ function updateNode(
   schemaName: string,
   propertiesAsString: string,
   diagramPage: ElementCompact,
-  apiDefinition: ApiDefinition
+  apiDefinition: ApiInputConfiguration
 ) {
   const diagramPageRoot: ElementCompact = diagramPage.diagram.mxGraphModel.root;
   const nodes = getNodesForSchema(schemaName, diagramPage.name, diagramPageRoot, apiDefinition);
@@ -213,7 +213,7 @@ function getPropertiesAsAggregatedString(schema: ReferenceObject | SchemaObject)
   return isEmpty(result) ? NO_PROPERTIES_RESULT_STRING : result;
 }
 
-export function updateDiagramPagesWithSchemas(diagramPages: Array<DiagramPage>, apiDefinition: ApiDefinition) {
+export function updateDiagramPagesWithSchemas(diagramPages: Array<DiagramPage>, apiDefinition: ApiInputConfiguration) {
   const api = loadOpenAPIV3Document(apiDefinition.openApiFilePath);
 
   const schemas = api.components?.schemas || {};

@@ -1,5 +1,4 @@
-import * as convert from 'xml-js';
-import { ElementCompact } from 'xml-js';
+import { ElementCompact , js2xml, xml2js} from 'xml-js';
 import fs from 'fs';
 import * as htmlEncoder from 'html-entities';
 import { deflateRaw, inflateRaw } from 'pako';
@@ -13,14 +12,19 @@ export interface DiagramPage {
   diagram: ElementCompact;
 }
 
-export function loadDrawIoFile(path: string): Array<DiagramPage> {
+export function loadDrawIoFile(path: string): DiagramPage[] {
+  if(!path){
+    throw Error("path must not be empty");
+  }
+
   const xmfileXml: string = fs.readFileSync(path, 'utf8');
-  const xmfileJs: ElementCompact = convert.xml2js(xmfileXml, { compact: true });
+  const xmfileJs: ElementCompact = xml2js(xmfileXml, { compact: true });
 
   const diagramContainer = xmfileJs.mxfile.diagram;
   let diagrams = [];
+
   if (!Array.isArray(diagramContainer)) {
-    // only 1 page existing in the drawio diagram ==> put into array for further processing
+  //   // only 1 page existing in the drawio diagram ==> put into array for further processing
     diagrams.push(diagramContainer);
   } else {
     diagrams = diagramContainer;
@@ -37,7 +41,7 @@ export function loadDrawIoFile(path: string): Array<DiagramPage> {
 
 export function updateDrawIoFile(updatedPages: Array<DiagramPage>, path: string): void {
   const xmFileXml: string = fs.readFileSync(path, 'utf8');
-  const xmfileJs: ElementCompact = convert.xml2js(xmFileXml, { compact: true });
+  const xmfileJs: ElementCompact = xml2js(xmFileXml, { compact: true });
 
   const diagramContainer = xmfileJs.mxfile.diagram;
   let diagrams = [];
@@ -55,7 +59,7 @@ export function updateDrawIoFile(updatedPages: Array<DiagramPage>, path: string)
     diagram._text = jsDiagram2compressedXmlDiagram(updatedPage.diagram);
   });
 
-  const updatedXmfileXml = convert.js2xml(xmfileJs, {
+  const updatedXmfileXml = js2xml(xmfileJs, {
     compact: true,
     spaces: 4,
     attributeValueFn: (val) => htmlEncoder.encode(val),
@@ -72,11 +76,11 @@ function compressedXmlDiagram2jsDiagram(diagram: any): ElementCompact {
   const xml = inflateRaw(data, { to: 'string' });
 
   const decodedXml = decodeURIComponent(xml);
-  return convert.xml2js(decodedXml, { compact: true });
+  return xml2js(decodedXml, { compact: true });
 }
 
 export function jsDiagram2compressedXmlDiagram(diagram: ElementCompact): any {
-  const xml = convert.js2xml(diagram, {
+  const xml = js2xml(diagram, {
     compact: true,
     spaces: 4,
     attributeValueFn: (val) => htmlEncoder.encode(val),
