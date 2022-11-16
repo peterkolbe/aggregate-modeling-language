@@ -5,6 +5,7 @@
   "scripts": {
     "prepare": "husky install .husky",
     "start": "ts-node ./src/app.ts",
+    "start-soeren": "ts-node ./src/iparseshit.ts",
     "test": "jest --watchAll",
     "prettier": "prettier 'src/**/*.{ts,tsx}' .",
     "prettier:check": "npm run prettier -- --check",
