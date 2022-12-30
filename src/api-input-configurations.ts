@@ -1,24 +1,54 @@
-import { ApiInputConfiguration } from './api-input-configuration.type';
+import { ApiConfiguration } from './api-input-configuration.type';
 
-export const apiInputConfigurations: ApiInputConfiguration[] = [
+export const apiInputConfigurations: ApiConfiguration[] = [
   {
     drawIoPageName: 'commons',
     openApiFilePath: './openapi/commons.yml',
     isCommon: true,
+    schemasToIgnore: [
+      'Approval',
+      'ApprovalProcess',
+      'ApprovalResult',
+      'Signature',
+      'SubmissionForApproval',
+      'Summary',
+      'LtaCaseType',
+      'User',
+      'CommandType',
+      'ExecutableCommand',
+      'ExecutedCommand',
+      'AbstractCommand',
+      'AbstractExecutableCommand',
+      'AbstractExecutedCommand',
+      'AggregateRootEntity',
+      'ApiObject',
+      'Entity',
+      'UserStamp',
+      'MyLovelySubUserStampSchema',
+      'ValueObject',
+      'Currency',
+      'DefaultProblem',
+      'ApproveCommandRequestBody',
+      'RemoveAttachmentCommandRequestBody',
+      'SubmitForApprovalCommandRequestBody',
+    ],
   },
   {
     drawIoPageName: 'corporates-analyses',
     openApiFilePath: './openapi/corporates-analyses.yml',
     isCommon: false,
+    schemasToIgnore: ['BalanceSheets', 'BalanceSheet', 'CreateCommandRequestBody'],
   },
   {
     drawIoPageName: 'asset-analyses-structured-finance',
     openApiFilePath: './openapi/asset-analyses-structured-finance.yml',
     isCommon: false,
+    schemasToIgnore: ['CreateCommandRequestBody'],
   },
   {
     drawIoPageName: 'analyses',
     openApiFilePath: './openapi/analyses.yml',
     isCommon: false,
+    schemasToIgnore: [],
   },
 ];

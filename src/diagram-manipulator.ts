@@ -5,10 +5,10 @@ import { OpenAPIV3 } from 'openapi-types';
 import * as htmlEncoder from 'html-entities';
 import { DiagramPage } from './drawio-file-handler';
 import { loadOpenAPIV3Document } from './openapi';
+import { ApiConfiguration } from './api-input-configuration.type';
 import ReferenceObject = OpenAPIV3.ReferenceObject;
 import SchemaObject = OpenAPIV3.SchemaObject;
 import ArraySchemaObject = OpenAPIV3.ArraySchemaObject;
-import { ApiInputConfiguration } from './api-input-configuration.type';
 
 const AML_NODE_LAYER_LABEL = 'model';
 const AML_NODE_TYPE_TAG_NAME = 'amlNodeType';
@@ -46,25 +46,49 @@ const nodeTypes = [
   AML_NODE_TYPE_COMMON_VALUE_OBJECT,
 ];
 
-function getNodesForSchema(
+function updateNodeOnDiagramPage(
+  schemaName: string,
+  propertiesAsString: string,
+  diagramPage: ElementCompact,
+  apiConfiguration: ApiConfiguration
+) {
+  const diagramPageRoot = getDiagramPageRoot(diagramPage);
+  const nodes = getAllNodesForSchemaOnDiagram(schemaName, diagramPage.name, diagramPageRoot, apiConfiguration);
+  const attributesObjects = getAllAttributesObjectsOnDiagramPage(diagramPageRoot);
+
+  nodes.forEach((node: any) => {
+    const nodeAttributes: any = getNodeAttributes(node, attributesObjects);
+    setNodeAttributesContent(nodeAttributes, propertiesAsString);
+    log.info(`${diagramPage.name} : Writing properties to schema - ${schemaName} - | ${propertiesAsString}`);
+
+    setSizeOfNode(propertiesAsString, node, nodeAttributes, schemaName);
+  });
+}
+
+function getAllNodesForSchemaOnDiagram(
   schemaName: string,
   pageName: string,
-  pageDiagramRoot: ElementCompact,
-  apiDefinition: ApiInputConfiguration
+  diagramRoot: ElementCompact,
+  apiConfiguration: ApiConfiguration
 ): Array<any> {
-  const nodes = pageDiagramRoot.object.filter(
+  const nodes = diagramRoot.object.filter(
     (object: any) =>
       nodeTypes.includes(object._attributes[AML_NODE_TYPE_TAG_NAME]) &&
       withoutWhitespacesAndLinebreaks(object._attributes['label']) === schemaName
   );
 
-  if (nodes.length < 1 && apiDefinition && pageName === apiDefinition.drawIoPageName) {
+  if (
+    nodes.length < 1 &&
+    pageName === apiConfiguration.drawIoPageName &&
+    !apiConfiguration.schemasToIgnore.includes(schemaName)
+  ) {
     log.warn(`${pageName} : No diagram element found for Schema - ${schemaName} - ==> skipping this element.`);
+    // TODO Create Missing Nodes for Schemas here
   }
   return nodes;
 }
 
-function getAttributesObject(elementWithProperties: any, attributesObjects: any) {
+function getNodeAttributes(elementWithProperties: any, attributesObjects: any) {
   const parentElementId = elementWithProperties._attributes.id;
   const foundAttributesObjects = attributesObjects.filter(
     (attributesObject: any) => attributesObject.mxCell._attributes.parent === parentElementId
@@ -126,27 +150,6 @@ function setSizeOfNode(
   log.debug(
     `Set ${schemaName} box sizes: [ collapsedHeight = ${collapsedElementWithPropertiesHeight}, collapsedWidth = ${PROPERTIES_BOX_COLLAPSED_WIDTH} ] - [ expandedHeight = ${expandedElementWithPropertiesHeight}, expandedWidth = ${PROPERTY_WIDTH} ].`
   );
-}
-
-function updateNode(
-  schemaName: string,
-  propertiesAsString: string,
-  diagramPage: ElementCompact,
-  apiDefinition: ApiInputConfiguration
-) {
-  const diagramPageRoot: ElementCompact = diagramPage.diagram.mxGraphModel.root;
-  const nodes = getNodesForSchema(schemaName, diagramPage.name, diagramPageRoot, apiDefinition);
-  const attributesObjects = diagramPageRoot.object.filter(
-    (obj: any) => obj._attributes[AML_NODE_CHILD_ELEMENT_TYPE_TAG_NAME] === AML_NODE_CHILD_ELEMENT_TYPE_ATTRIBUTES
-  );
-
-  nodes.forEach((node: any) => {
-    const attributesObject: any = getAttributesObject(node, attributesObjects);
-    attributesObject._attributes.label = propertiesAsString;
-    log.info(`${diagramPage.name} : Writing properties to schema - ${schemaName} - | ${propertiesAsString}`);
-
-    setSizeOfNode(propertiesAsString, node, attributesObject, schemaName);
-  });
 }
 
 function handleArray(
@@ -213,16 +216,16 @@ function getPropertiesAsAggregatedString(schema: ReferenceObject | SchemaObject)
   return isEmpty(result) ? NO_PROPERTIES_RESULT_STRING : result;
 }
 
-export function updateDiagramPagesWithSchemas(diagramPages: Array<DiagramPage>, apiDefinition: ApiInputConfiguration) {
-  const api = loadOpenAPIV3Document(apiDefinition.openApiFilePath);
+export function updateDiagramPagesWithSchemas(diagramPages: Array<DiagramPage>, apiConfiguration: ApiConfiguration) {
+  const api = loadOpenAPIV3Document(apiConfiguration.openApiFilePath);
 
-  const schemas = api.components?.schemas || {};
+  const apiSchemas = api.components?.schemas || {};
   log.info(`\n----------------> Updating pages with schemas from API - ${api.info.title} -\n`);
 
-  Object.entries(schemas).forEach(([schemaName, schema]) => {
+  Object.entries(apiSchemas).forEach(([schemaName, schema]) => {
     diagramPages.forEach((diagramPage) => {
       const propertiesString = getPropertiesAsAggregatedString(schema);
-      updateNode(schemaName, propertiesString, diagramPage, apiDefinition);
+      updateNodeOnDiagramPage(schemaName, propertiesString, diagramPage, apiConfiguration);
     });
   });
 
@@ -237,4 +240,18 @@ function withoutWhitespacesAndLinebreaks(label: string): string {
     .replace(/\<br\s\/>/g, '')
     .replace(/\s+/g, '')
     .replace(/(\r\n|\n|\r)/gm, '');
+}
+
+function getDiagramPageRoot(diagramPage: ElementCompact) {
+  return diagramPage.diagram.mxGraphModel.root;
+}
+
+function getAllAttributesObjectsOnDiagramPage(diagramPageRoot: any) {
+  return diagramPageRoot.object.filter(
+    (obj: any) => obj._attributes[AML_NODE_CHILD_ELEMENT_TYPE_TAG_NAME] === AML_NODE_CHILD_ELEMENT_TYPE_ATTRIBUTES
+  );
+}
+
+function setNodeAttributesContent(nodeAttributes: any, propertiesAsString: string) {
+  nodeAttributes._attributes.label = propertiesAsString;
 }
